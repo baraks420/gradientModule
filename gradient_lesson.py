@@ -4,6 +4,7 @@ import plotly.express as px
 import sympy as sp
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from derivative_examples import DERIVATIVE_RULES, PRACTICE_PROBLEMS
 
 # Initialize session state for page navigation if it doesn't exist
 if "current_page" not in st.session_state:
@@ -210,92 +211,235 @@ elif st.session_state["current_page"] == "Derivatives Basics":
     st.title("Derivatives - Pre-requisite for Gradient")
     st.markdown("""
     ## Understanding Derivatives
-    A **derivative** measures the instantaneous rate of change of a function with respect to one of its variables.
+    A **derivative** measures the rate at which a function changes with respect to one of its variables.
     
-    ### Definition
-    For a function **f(x)**, its derivative represents the slope of the tangent line at any point:
+    ### Definition and Interpretation
+    If we have a function **f(x)**, its derivative is defined as:
     
     $$
-    f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} = \\lim_{\\Delta x \\to 0} \\frac{\\Delta y}{\\Delta x}
+    f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}
     $$
     
-    ### Differentiation Rules
-    1. **Power Rule:**
-       $$\\frac{d}{dx}[x^n] = nx^{n-1}$$
+    This represents:
+    1. The instantaneous rate of change at any point
+    2. The slope of the tangent line at point x
+    3. The best linear approximation of the function near x
     
-    2. **Sum Rule:**
-       $$\\frac{d}{dx}[f(x) ± g(x)] = f'(x) ± g'(x)$$
+    ### Fundamental Rules of Differentiation
+    """)
     
-    3. **Product Rule:**
-       $$\\frac{d}{dx}[f(x)g(x)] = f'(x)g(x) + f(x)g'(x)$$
+    # Create tabs for different rule categories
+    rules_tab, examples_tab, practice_tab = st.tabs(["Rules", "Examples", "Practice"])
     
-    4. **Quotient Rule:**
-       $$\\frac{d}{dx}[\\frac{f(x)}{g(x)}] = \\frac{f'(x)g(x) - f(x)g'(x)}{[g(x)]^2}$$
+    with rules_tab:
+        st.markdown("""
+        ### Basic Rules & Common Functions
+        $$
+        \\begin{align*}
+        & \\textbf{Power:} & \\frac{d}{dx} x^n &= nx^{n-1} & & \\textbf{Exp/Log:} & \\frac{d}{dx}e^x &= e^x & \\frac{d}{dx}\\ln x &= \\frac{1}{x} \\\\[0.7em]
+        & \\textbf{Product:} & \\frac{d}{dx}[fg] &= f'g + fg' & & \\textbf{Trig:} & \\frac{d}{dx}\\sin x &= \\cos x & \\frac{d}{dx}\\cos x &= -\\sin x \\\\[0.7em]
+        & \\textbf{Quotient:} & \\frac{d}{dx}\\frac{f}{g} &= \\frac{f'g - fg'}{g^2} \\\\[0.7em]
+        & \\textbf{Chain:} & \\frac{d}{dx}f(g(x)) &= f'(g(x))g'(x)
+        \\end{align*}
+        $$
+        """)
     
-    5. **Chain Rule:**
-       $$\\frac{d}{dx}[f(g(x))] = f'(g(x))g'(x)$$
+    with examples_tab:
+        selected_rule = st.selectbox(
+            "Select a rule to see examples:",
+            list(DERIVATIVE_RULES.keys())
+        )
+        
+        st.markdown("### Examples:")
+        for example in DERIVATIVE_RULES[selected_rule]["examples"]:
+            st.markdown(rf"""
+            $$
+            \frac{{d}}{{dx}}({example['input']}) = {example['output']}
+            $$
+            """)
     
-    ### Common Derivatives
-    $$
-    \\begin{array}{ll}
-    \\frac{d}{dx}[c] = 0 & \\text{(constant rule)} \\\\[1em]
-    \\frac{d}{dx}[x] = 1 & \\text{(power rule, n=1)} \\\\[1em]
-    \\frac{d}{dx}[\\sin(x)] = \\cos(x) & \\frac{d}{dx}[\\cos(x)] = -\\sin(x) \\\\[1em]
-    \\frac{d}{dx}[\\tan(x)] = \\sec^2(x) & \\frac{d}{dx}[\\sec(x)] = \\sec(x)\\tan(x) \\\\[1em]
-    \\frac{d}{dx}[e^x] = e^x & \\frac{d}{dx}[\\ln(x)] = \\frac{1}{x} \\\\[1em]
-    \\frac{d}{dx}[a^x] = a^x\\ln(a) & \\frac{d}{dx}[\\log_a(x)] = \\frac{1}{x\\ln(a)}
-    \\end{array}
-    $$
+    with practice_tab:
+        st.markdown("### Practice Problems")
+        st.markdown("Click any problem tile to see its solution. Click again to close.")
+        
+        # Initialize problem page in session state if not exists
+        if 'problem_page' not in st.session_state:
+            st.session_state.problem_page = 0
+            
+        # Calculate total number of pages
+        total_pages = (len(PRACTICE_PROBLEMS) + 5) // 6  # Ceiling division
+        
+        # Display current set of 6 problems (2 rows of 3)
+        start_idx = st.session_state.problem_page * 6
+        for row in range(2):  # 2 rows
+            cols = st.columns(3)  # 3 columns per row
+            for col in range(3):  # Fill each column
+                prob_idx = start_idx + row * 3 + col
+                if prob_idx < len(PRACTICE_PROBLEMS):
+                    problem = PRACTICE_PROBLEMS[prob_idx]
+                    with cols[col]:
+                        with st.expander(f"Problem {prob_idx + 1}:\nf(x) = ${problem['function']}$", expanded=False):
+                            st.latex(rf"\frac{{d}}{{dx}}({problem['function']}) = {problem['solution']}")
+                            st.markdown(f"**Explanation:**\n{problem['explanation']}")
+        
+        # Navigation buttons with compact layout
+        col1, col2, col3, col4 = st.columns([8, 1, 1, 1])
+        
+        # Empty column for spacing
+        with col1:
+            st.write("")
+            
+        # Previous button
+        with col2:
+            if st.session_state.problem_page > 0:
+                if st.button("← Prev", use_container_width=True):
+                    st.session_state.problem_page -= 1
+                    st.rerun()
+                    
+        # Page number
+        with col3:
+            st.markdown(f"<div style='text-align: center; margin-top: 5px;'>{st.session_state.problem_page + 1}/{total_pages}</div>", unsafe_allow_html=True)
+            
+        # Next button
+        with col4:
+            if st.session_state.problem_page < total_pages - 1:
+                if st.button("Next →", use_container_width=True):
+                    st.session_state.problem_page += 1
+                    st.rerun()
+
+    st.markdown("### Interactive Visualization")
+    # Add function selector in a smaller column
+    col1, col2, col3 = st.columns([1,2,1])
+    with col1:
+        function_choice = st.selectbox(
+            "Select a function:",  # Shortened label
+            ["f(x) = x²", 
+             "f(x) = x³", 
+             "f(x) = sin(x)",
+             "f(x) = e^x",
+             "f(x) = ln(x)"],
+            index=0
+        )
+
+    # Display the selected function and its derivative
+    st.markdown(f"""
+    - Derivative: {get_derivative_string(function_choice)}
     """)
 
-    # Examples section with expandable content
-    with st.expander("📝 Example Derivatives", expanded=False):
-        st.markdown("""
-        ### Step-by-Step Examples
-        
-        1. **Product Rule Example:** f(x) = x²sin(x)
-           ```
-           f'(x) = x² · d/dx[sin(x)] + sin(x) · d/dx[x²]
-                 = x²cos(x) + sin(x)(2x)
-                 = x²cos(x) + 2xsin(x)
-           ```
-        
-        2. **Chain Rule Example:** f(x) = sin(x²)
-           ```
-           f'(x) = cos(x²) · d/dx[x²]
-                 = cos(x²)(2x)
-                 = 2xcos(x²)
-           ```
-        
-        3. **Quotient Rule Example:** f(x) = tan(x) = sin(x)/cos(x)
-           ```
-           f'(x) = [cos(x)cos(x) - sin(x)(-sin(x))]/cos²(x)
-                 = [cos²(x) + sin²(x)]/cos²(x)
-                 = sec²(x)
-           ```
-        """)
+    # Create interactive plot with slider
+    x_point = st.slider("Select x position", min_value=-2.0, max_value=2.0, value=0.0, step=0.1)
+    
+    # Calculate function values based on selection
+    X = np.linspace(-2, 2, 100)
+    
+    if function_choice == "f(x) = x²":
+        Y = X**2
+        dY = 2*X
+        y_point = x_point**2
+        derivative_at_point = 2 * x_point
+    elif function_choice == "f(x) = x³":
+        Y = X**3
+        dY = 3*(X**2)
+        y_point = x_point**3
+        derivative_at_point = 3 * (x_point**2)
+    elif function_choice == "f(x) = sin(x)":
+        Y = np.sin(X)
+        dY = np.cos(X)
+        y_point = np.sin(x_point)
+        derivative_at_point = np.cos(x_point)
+    elif function_choice == "f(x) = e^x":
+        Y = np.exp(X)
+        dY = np.exp(X)
+        y_point = np.exp(x_point)
+        derivative_at_point = np.exp(x_point)
+    else:  # ln(x)
+        # Adjust domain for ln(x) since it's only defined for x > 0
+        X = np.linspace(0.1, 2, 100)
+        Y = np.log(X)
+        dY = 1/X
+        y_point = np.log(max(x_point, 0.1))
+        derivative_at_point = 1/max(x_point, 0.1)
+        x_point = max(x_point, 0.1)  # Ensure x is positive for ln(x)
 
-    # Practice section
-    with st.expander("✍️ Practice Problems", expanded=False):
-        st.markdown("### Try these derivatives:")
-        
-        practice_problems = {
-            "1": {"expr": "x⁴ + 3x² - 2x", "solution": "4x³ + 6x - 2"},
-            "2": {"expr": "sin(x)cos(x)", "solution": "cos²(x) - sin²(x)"},
-            "3": {"expr": "e^(x²)", "solution": "2xe^(x²)"},
-            "4": {"expr": "(x² + 1)/(x - 1)", "solution": "(2x(x-1) - (x²+1))/(x-1)²"},
-            "5": {"expr": "ln(x²+1)", "solution": "2x/(x²+1)"}
-        }
-        
-        for num, prob in practice_problems.items():
-            col1, col2 = st.columns([3,1])
-            with col1:
-                st.latex(f"\\frac{d}{{dx}}[{prob['expr']}]")
-            with col2:
-                if st.button(f"Show Solution {num}"):
-                    st.latex(prob['solution'])
-
-    # Interactive visualization section follows...
+    # Create points for tangent line
+    x_tangent = np.array([x_point - 0.5, x_point + 0.5])
+    y_tangent = derivative_at_point * (x_tangent - x_point) + y_point
+    
+    # Create subplots
+    fig = go.Figure()
+    fig = make_subplots(rows=2, cols=1, 
+                       subplot_titles=(
+                           f"Function {function_choice} with tangent line (slope: {derivative_at_point:.2f})",
+                           f"Derivative d/dx({function_choice})"
+                       ))
+    
+    # Add original function to first subplot
+    fig.add_trace(
+        go.Scatter(x=X, y=Y, mode='lines', name=function_choice, line=dict(color='blue')),
+        row=1, col=1
+    )
+    
+    # Add tangent line to first subplot (now solid)
+    fig.add_trace(
+        go.Scatter(x=x_tangent, y=y_tangent, mode='lines', 
+                  name=f'Tangent at x={x_point}', 
+                  line=dict(color='red'),
+                  showlegend=False),  # Removed dash='dash'
+        row=1, col=1
+    )
+    
+    # Add point on original function
+    fig.add_trace(
+        go.Scatter(x=[x_point], y=[y_point], mode='markers',
+                  name=f'x = {x_point}', 
+                  marker=dict(color='red', size=10)),
+        row=1, col=1
+    )
+    
+    # Add derivative function to second subplot
+    fig.add_trace(
+        go.Scatter(x=X, y=dY, mode='lines', 
+                  name=f"d/dx({function_choice}) = {derivative_at_point:.2f}",
+                  line=dict(color='orange'),
+                  showlegend=False),
+        row=2, col=1
+    )
+    
+    # Add horizontal dotted line at derivative value
+    fig.add_trace(
+        go.Scatter(x=[-2, 2], y=[derivative_at_point, derivative_at_point],
+                  mode='lines',
+                  name=f"d/dx({function_choice}) = {derivative_at_point:.2f}",
+                  line=dict(color='red', dash='dash')),
+        row=2, col=1
+    )
+    
+    # Add point on derivative
+    fig.add_trace(
+        go.Scatter(x=[x_point], y=[derivative_at_point], 
+                  mode='markers',
+                  name='Derivative Value', 
+                  marker=dict(color='red', size=10),
+                  showlegend=False),
+        row=2, col=1
+    )
+    
+    # Update layout
+    fig.update_layout(
+        height=700,
+        showlegend=True,
+        title_text="Function and its Derivative"
+    )
+    
+    # Update axes labels
+    fig.update_xaxes(title_text="x", row=1, col=1)
+    fig.update_xaxes(title_text="x", row=2, col=1)
+    fig.update_yaxes(title_text="f(x)", row=1, col=1)
+    fig.update_yaxes(title_text="f'(x)", row=2, col=1)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    add_navigation_buttons(prev_page="Introduction", next_page="Gradient Explanation")
 
 elif st.session_state["current_page"] == "Gradient Explanation":
     st.title("Detailed Explanation of Gradient")
