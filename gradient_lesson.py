@@ -17,10 +17,10 @@ st.set_page_config(page_title="Gradient Learning Module", layout="wide")
 st.sidebar.title("Gradient Learning Module")
 page = st.sidebar.radio("Select a chapter:", [
     "Welcome", "Introduction", "Derivatives Basics", "Gradient Explanation", 
-    "Gradient Visualization", "Gradient Applications"],
+    "Gradient Visualization", "Gradient Applications", "Quiz"],
     index=[
         "Welcome", "Introduction", "Derivatives Basics", "Gradient Explanation", 
-        "Gradient Visualization", "Gradient Applications"
+        "Gradient Visualization", "Gradient Applications", "Quiz"
     ].index(st.session_state["current_page"]))
 
 # Update current_page based on radio selection
@@ -469,17 +469,24 @@ elif st.session_state["current_page"] == "Gradient Explanation":
     
     # Interactive gradient calculator
     x, y = sp.symbols('x y')
-    input_function = st.text_input("Enter a function in x and y (e.g., x**2 + y**2):", "x**2 + y**2")
+    input_function = st.text_input("Enter a function in x and y (e.g., x^2 + y^2):", "x^2 + y^2")
     
     try:
-        expr = sp.sympify(input_function)
+        # Replace ^ with ** for Python evaluation
+        python_expr = input_function.replace('^', '**')
+        expr = sp.sympify(python_expr)
+        # Convert back to ^ for display
+        display_expr = str(expr).replace('**', '^')
         grad_x = sp.diff(expr, x)
         grad_y = sp.diff(expr, y)
+        # Convert derivatives to display format
+        display_grad_x = str(grad_x).replace('**', '^')
+        display_grad_y = str(grad_y).replace('**', '^')
         st.markdown(f"""
-        The gradient of f(x,y) = {expr} is:
+        The gradient of f(x,y) = {display_expr} is:
         
         $$
-        \\nabla f = ({grad_x}, {grad_y})
+        \\nabla f = ({display_grad_x}, {display_grad_y})
         $$
         """)
     except:
@@ -490,18 +497,750 @@ elif st.session_state["current_page"] == "Gradient Explanation":
 elif st.session_state["current_page"] == "Gradient Visualization":
     st.title("Visualizing Gradient")
     st.markdown("""
-    Below is a graphical representation of gradient fields.
+    ### Understanding Gradient Fields
+    A gradient field is a visual representation of gradients at different points in space. 
+    The arrows in the field indicate:
+    - **Direction**: Where the function increases most rapidly
+    - **Length**: How steep the increase is at that point
+    
+    ### Interactive Gradient Field Visualization
+    Select a function to visualize its gradient field:
+    """)
+    
+    # Function selection
+    function_choice = st.selectbox(
+        "Choose a function:",
+        ["f(x,y) = x² + y²", 
+         "f(x,y) = sin(x)cos(y)",
+         "f(x,y) = x² - y²",
+         "f(x,y) = e^(-x² - y²)"],
+        index=0
+    )
+    
+    # Create grid of points
+    x = np.linspace(-2, 2, 20)
+    y = np.linspace(-2, 2, 20)
+    X, Y = np.meshgrid(x, y)
+    
+    # Calculate function values and gradients based on selection
+    if function_choice == "f(x,y) = x² + y²":
+        Z = X**2 + Y**2
+        U = 2*X  # dx
+        V = 2*Y  # dy
+        title = "Gradient Field of f(x,y) = x² + y²"
+    elif function_choice == "f(x,y) = sin(x)cos(y)":
+        Z = np.sin(X) * np.cos(Y)
+        U = np.cos(X) * np.cos(Y)  # dx
+        V = -np.sin(X) * np.sin(Y)  # dy
+        title = "Gradient Field of f(x,y) = sin(x)cos(y)"
+    elif function_choice == "f(x,y) = x² - y²":
+        Z = X**2 - Y**2
+        U = 2*X  # dx
+        V = -2*Y  # dy
+        title = "Gradient Field of f(x,y) = x² - y²"
+    else:  # e^(-x² - y²)
+        Z = np.exp(-X**2 - Y**2)
+        U = -2*X*np.exp(-X**2 - Y**2)  # dx
+        V = -2*Y*np.exp(-X**2 - Y**2)  # dy
+        title = "Gradient Field of f(x,y) = e^(-x² - y²)"
+    
+    # Create tabs for different visualizations
+    contour_tab, field_tab, surface_tab = st.tabs(["Contour Plot", "Gradient Field", "3D Surface"])
+    
+    with contour_tab:
+        st.markdown("""
+        ### Contour Plot with Gradient Vectors
+        The contour lines show points of equal height (level curves). 
+        The gradient vectors are always perpendicular to these contour lines.
+        """)
+        
+        fig = go.Figure()
+        
+        # Add contour plot
+        fig.add_trace(go.Contour(
+            x=x, y=y, z=Z,
+            colorscale='Viridis',
+            showscale=True,
+            name='Function Value'
+        ))
+        
+        # Add gradient vectors using quiver plot
+        skip = 2  # Show fewer arrows for clarity
+        # Normalize vectors for better visualization
+        magnitudes = np.sqrt(U**2 + V**2)
+        max_magnitude = np.max(magnitudes)
+        scale = 0.2  # Scale factor for arrow length
+        
+        for i in range(0, len(x), skip):
+            for j in range(0, len(y), skip):
+                # Starting point of arrow
+                x_start = X[i,j]
+                y_start = Y[i,j]
+                
+                # Calculate arrow end point
+                magnitude = magnitudes[i,j]
+                if magnitude > 0:  # Avoid division by zero
+                    dx = U[i,j] / magnitude * scale
+                    dy = V[i,j] / magnitude * scale
+                else:
+                    dx = dy = 0
+                
+                # Add arrow
+                fig.add_trace(go.Scatter(
+                    x=[x_start, x_start + dx],
+                    y=[y_start, y_start + dy],
+                    mode='lines',
+                    line=dict(color='red', width=1),
+                    showlegend=False
+                ))
+                
+                # Add arrowhead
+                fig.add_trace(go.Scatter(
+                    x=[x_start + dx],
+                    y=[y_start + dy],
+                    mode='markers',
+                    marker=dict(
+                        symbol='triangle-up',
+                        angle=np.arctan2(dy, dx) * 180 / np.pi - 90,
+                        size=8,
+                        color='red'
+                    ),
+                    showlegend=False
+                ))
+        
+        # Add a single legend entry for gradient vectors
+        fig.add_trace(go.Scatter(
+            x=[None],
+            y=[None],
+            mode='lines+markers',
+            name='Gradient Vectors',
+            line=dict(color='red'),
+            marker=dict(symbol='triangle-up', color='red')
+        ))
+        
+        fig.update_layout(
+            title=title,
+            width=700,
+            height=600,
+            xaxis=dict(range=[-2.2, 2.2]),
+            yaxis=dict(range=[-2.2, 2.2]),
+            xaxis_title='x',
+            yaxis_title='y'
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with field_tab:
+        st.markdown("""
+        ### Pure Gradient Field
+        This visualization shows just the gradient vectors, helping you understand
+        the direction and magnitude of steepest increase at each point.
+        The color and length of each arrow represents the gradient magnitude.
+        """)
+        
+        fig = go.Figure()
+        
+        # Create gradient field using arrows
+        skip = 2
+        # Normalize vectors for better visualization
+        magnitudes = np.sqrt(U**2 + V**2)
+        max_magnitude = np.max(magnitudes)
+        scale = 0.2  # Scale factor for arrow length
+        
+        # Create a colormap function
+        def get_color(magnitude):
+            # Convert magnitude to a color using viridis colormap
+            # Returns color in rgb format
+            norm_magnitude = magnitude / max_magnitude
+            return f'rgb({int(255 * (1-norm_magnitude))}, {int(255 * norm_magnitude)}, 255)'
+        
+        for i in range(0, len(x), skip):
+            for j in range(0, len(y), skip):
+                # Starting point of arrow
+                x_start = X[i,j]
+                y_start = Y[i,j]
+                
+                # Calculate arrow end point
+                magnitude = magnitudes[i,j]
+                if magnitude > 0:  # Avoid division by zero
+                    dx = U[i,j] / magnitude * scale * magnitude/max_magnitude
+                    dy = V[i,j] / magnitude * scale * magnitude/max_magnitude
+                else:
+                    dx = dy = 0
+                
+                # Get color based on magnitude
+                arrow_color = get_color(magnitude)
+                
+                # Add arrow shaft
+                fig.add_trace(go.Scatter(
+                    x=[x_start, x_start + dx],
+                    y=[y_start, y_start + dy],
+                    mode='lines',
+                    line=dict(
+                        color=arrow_color,
+                        width=2
+                    ),
+                    showlegend=False
+                ))
+                
+                # Add arrowhead
+                fig.add_trace(go.Scatter(
+                    x=[x_start + dx],
+                    y=[y_start + dy],
+                    mode='markers',
+                    marker=dict(
+                        symbol='triangle-up',
+                        angle=np.arctan2(dy, dx) * 180 / np.pi - 90,
+                        size=8,
+                        color=arrow_color
+                    ),
+                    showlegend=False
+                ))
+        
+        # Add colorbar
+        colorbar_trace = go.Scatter(
+            x=[None],
+            y=[None],
+            mode='markers',
+            marker=dict(
+                size=1,
+                color=[0, max_magnitude],
+                colorscale='Viridis',
+                showscale=True,
+                colorbar=dict(
+                    title=dict(
+                        text='Gradient Magnitude',
+                        side='right'
+                    )
+                )
+            ),
+            showlegend=False
+        )
+        fig.add_trace(colorbar_trace)
+        
+        fig.update_layout(
+            title=title,
+            width=700,
+            height=600,
+            xaxis=dict(range=[-2.2, 2.2]),
+            yaxis=dict(range=[-2.2, 2.2]),
+            xaxis_title='x',
+            yaxis_title='y'
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with surface_tab:
+        st.markdown("""
+        ### 3D Surface Plot
+        This visualization shows the actual shape of the function in 3D space.
+        The gradient vectors (shown as red arrows) at each point are tangent to the surface 
+        and point in the direction of steepest ascent.
+        """)
+        
+        fig = go.Figure()
+        
+        # Add surface plot
+        fig.add_trace(go.Surface(x=X, y=Y, z=Z, colorscale='Viridis', opacity=0.8))
+        
+        # Add gradient vectors as arrows
+        skip = 4  # Show fewer arrows for clarity in 3D
+        # Normalize vectors for better visualization
+        magnitudes = np.sqrt(U**2 + V**2)
+        max_magnitude = np.max(magnitudes)
+        scale = 0.2  # Scale factor for arrow length
+        
+        # Create points for gradient vectors
+        x_points = []
+        y_points = []
+        z_points = []
+        u_points = []
+        v_points = []
+        w_points = []
+        
+        for i in range(0, len(x), skip):
+            for j in range(0, len(y), skip):
+                x_start = X[i,j]
+                y_start = Y[i,j]
+                z_start = Z[i,j]
+                
+                # Calculate gradient components
+                dx = U[i,j]
+                dy = V[i,j]
+                # Calculate z-component based on the surface slope
+                if i > 0 and i < len(x)-1 and j > 0 and j < len(y)-1:
+                    dz = (Z[i+1,j] - Z[i-1,j])/(2*scale) * dx + (Z[i,j+1] - Z[i,j-1])/(2*scale) * dy
+                else:
+                    dz = 0
+                
+                # Normalize and scale the vector
+                magnitude = np.sqrt(dx**2 + dy**2 + dz**2)
+                if magnitude > 0:
+                    dx = dx/magnitude * scale
+                    dy = dy/magnitude * scale
+                    dz = dz/magnitude * scale
+                
+                x_points.append(x_start)
+                y_points.append(y_start)
+                z_points.append(z_start)
+                u_points.append(dx)
+                v_points.append(dy)
+                w_points.append(dz)
+        
+        # Add arrows (lines + cones)
+        for i in range(len(x_points)):
+            # Base of the arrow
+            x_base = x_points[i]
+            y_base = y_points[i]
+            z_base = z_points[i]
+            
+            # Vector components
+            dx = u_points[i]
+            dy = v_points[i]
+            dz = w_points[i]
+            
+            # End point of the line (slightly before the cone)
+            line_fraction = 0.8  # Line takes up 80% of the arrow length
+            x_end = x_base + dx * line_fraction
+            y_end = y_base + dy * line_fraction
+            z_end = z_base + dz * line_fraction
+            
+            # Add line (arrow shaft)
+            fig.add_trace(go.Scatter3d(
+                x=[x_base, x_end],
+                y=[y_base, y_end],
+                z=[z_base, z_end],
+                mode='lines',
+                line=dict(color='red', width=3),
+                showlegend=False
+            ))
+            
+            # Add cone (arrowhead)
+            fig.add_trace(go.Cone(
+                x=[x_end],
+                y=[y_end],
+                z=[z_end],
+                u=[dx * (1-line_fraction)],  # Cone size is the remaining 20%
+                v=[dy * (1-line_fraction)],
+                w=[dz * (1-line_fraction)],
+                colorscale=[[0, 'red'], [1, 'red']],
+                showscale=False,
+                sizeref=0.25  # Smaller cones for better proportion
+            ))
+        
+        fig.update_layout(
+            title=title,
+            width=700,
+            height=600,
+            scene=dict(
+                xaxis_title='x',
+                yaxis_title='y',
+                zaxis_title='f(x,y)',
+                camera=dict(
+                    eye=dict(x=1.5, y=1.5, z=1.2)
+                ),
+                aspectmode='cube'
+            ),
+            showlegend=False
+        )
+        
+        # Add camera controls explanation
+        st.plotly_chart(fig, use_container_width=True)
+        st.info("""
+        💡 **Tip**: You can interact with the 3D plot:
+        - Click and drag to rotate the view
+        - Scroll to zoom in/out
+        - Right-click and drag to pan
+        - Double-click to reset the view
+        """)
+    
+    st.markdown("""
+    ### Key Observations
+    1. **Gradient Direction**: 
+       - The arrows always point in the direction of steepest increase
+       - Longer arrows indicate steeper slopes
+       
+    2. **Level Curves**: 
+       - The contour lines connect points of equal height
+       - The gradient is always perpendicular to the level curves
+       
+    3. **Critical Points**:
+       - Notice how the gradient vectors become shorter near critical points
+       - At local maxima/minima, the gradient approaches zero
+       
+    4. **Symmetry**:
+       - Observe how the gradient field reflects the symmetry of the function
+       - For example, in x² + y², the field has radial symmetry
     """)
     
     add_navigation_buttons(prev_page="Gradient Explanation", next_page="Gradient Applications")
 
 elif st.session_state["current_page"] == "Gradient Applications":
-    st.title("Applications of Gradient in Computer Science")
-    st.markdown("""
-    ### Applications
-    - **Gradient Descent**: Used in machine learning for optimization.
-    - **Physics**: Used in potential field calculations.
-    - **Mathematical Modeling**: Used in function optimization problems.
-    """)
+    st.title("Applications of Gradients")
+    
+    # Create tabs for different application areas
+    ml_tab, physics_tab, math_tab = st.tabs(["Machine Learning", "Physics", "Mathematics"])
+    
+    with ml_tab:
+        st.markdown("""
+        ## Gradient Descent in Machine Learning
+        
+        ### What is Gradient Descent?
+        Gradient descent is an optimization algorithm that uses gradients to find the minimum of a function. 
+        In machine learning, we use it to minimize the error (loss) of our models.
+        
+        ### How it Works
+        1. Start at a random point
+        2. Calculate the gradient (direction of steepest increase)
+        3. Move in the opposite direction of the gradient
+        4. Repeat until reaching a minimum
+        
+        $$
+        \\text{New Position} = \\text{Current Position} - \\text{Learning Rate} \\times \\nabla f
+        $$
+        
+        ### Applications in Machine Learning
+        - **Neural Networks**: Training deep learning models
+        - **Linear Regression**: Finding optimal coefficients
+        - **Logistic Regression**: Optimizing classification models
+        - **Support Vector Machines**: Finding optimal decision boundaries
+        
+        ### Types of Gradient Descent
+        1. **Batch Gradient Descent**: Uses entire dataset
+        2. **Stochastic Gradient Descent (SGD)**: Uses one sample at a time
+        3. **Mini-batch Gradient Descent**: Uses small batches of data
+        
+        ### Advanced Variants
+        - Adam Optimizer
+        - RMSprop
+        - Momentum
+        - AdaGrad
+        
+        Each variant improves upon basic gradient descent by addressing specific challenges like:
+        - Learning rate adaptation
+        - Escaping local minima
+        - Handling sparse gradients
+        """)
+        
+        # Add interactive visualization for gradient descent
+        st.markdown("""
+        ### Interactive Visualization: Gradient Descent in 2D
+        Watch how gradient descent finds the minimum of a function:
+        """)
+        
+        # Create contour plot of a simple function
+        x = np.linspace(-2, 2, 100)
+        y = np.linspace(-2, 2, 100)
+        X, Y = np.meshgrid(x, y)
+        Z = X**2 + Y**2  # Simple bowl-shaped function
+        
+        # Create animation frames for gradient descent
+        steps = 10
+        learning_rate = 0.3
+        start_point = np.array([1.5, 1.5])
+        points = [start_point]
+        
+        for _ in range(steps):
+            current = points[-1]
+            gradient = np.array([2*current[0], 2*current[1]])  # Gradient of x^2 + y^2
+            next_point = current - learning_rate * gradient
+            points.append(next_point)
+        
+        points = np.array(points)
+        
+        # Plot
+        fig = go.Figure()
+        
+        # Add contour plot
+        fig.add_trace(go.Contour(
+            x=x, y=y, z=Z,
+            colorscale='Viridis',
+            showscale=True,
+            name='Loss Surface'
+        ))
+        
+        # Add gradient descent path
+        fig.add_trace(go.Scatter(
+            x=points[:, 0], y=points[:, 1],
+            mode='lines+markers',
+            name='Gradient Descent Path',
+            line=dict(color='red', width=2),
+            marker=dict(size=8, symbol='circle')
+        ))
+        
+        fig.update_layout(
+            title='Gradient Descent Optimization',
+            width=700, height=500,
+            xaxis_title='Parameter 1',
+            yaxis_title='Parameter 2'
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with physics_tab:
+        st.markdown("""
+        ## Applications in Physics
+        
+        ### Potential Fields
+        Gradients are fundamental in understanding potential fields in physics:
+        
+        1. **Gravitational Fields**
+        - The gradient of gravitational potential gives the gravitational field
+        - $$\\vec{g} = -\\nabla \\phi$$
+        - Where $$\\phi$$ is the gravitational potential
+        
+        2. **Electric Fields**
+        - Electric field is the negative gradient of electric potential
+        - $$\\vec{E} = -\\nabla V$$
+        - Where V is the electric potential
+        
+        3. **Magnetic Fields**
+        - Magnetic vector potential and its relationship to magnetic fields
+        - Used in electromagnetic theory
+        
+        ### Fluid Dynamics
+        - **Pressure Gradients**: Drive fluid flow
+        - **Temperature Gradients**: Cause heat flow
+        - **Concentration Gradients**: Drive diffusion
+        
+        ### Quantum Mechanics
+        - **Probability Current**: Related to the gradient of wave function phase
+        - **Momentum Operator**: Proportional to gradient operator
+        - $$\\hat{p} = -i\\hbar\\nabla$$
+        """)
+        
+    with math_tab:
+        st.markdown("""
+        ## Mathematical Applications
+        
+        ### Optimization Problems
+        1. **Finding Extrema**
+        - Local maxima and minima occur where $$\\nabla f = 0$$
+        - Second derivatives determine nature of critical points
+        
+        2. **Constrained Optimization**
+        - Method of Lagrange multipliers
+        - $$\\nabla f = \\lambda \\nabla g$$
+        - Where g is the constraint function
+        
+        ### Differential Geometry
+        1. **Surface Normal**
+        - Gradient gives direction perpendicular to level curves
+        - Used in computer graphics for shading
+        
+        2. **Tangent Spaces**
+        - Gradient helps define tangent planes to surfaces
+        
+        ### Vector Calculus
+        1. **Conservative Fields**
+        - Field F is conservative if $$F = \\nabla f$$ for some scalar function f
+        - Important in physics for force fields
+        
+        2. **Directional Derivatives**
+        - Rate of change in any direction
+        - $$\\nabla_v f = \\nabla f \\cdot \\vec{v}$$
+        
+        ### Applications in Analysis
+        1. **Maximum Rate of Change**
+        - Gradient points in direction of steepest increase
+        - Magnitude gives the rate of change
+        
+        2. **Level Sets**
+        - Gradient is perpendicular to level sets
+        - Used in image processing and computer vision
+        """)
     
     add_navigation_buttons(prev_page="Gradient Visualization", next_page="Quiz")
+
+elif st.session_state["current_page"] == "Quiz":
+    st.title("📝 Gradient Learning Module Quiz")
+    st.markdown("""
+    ### Test Your Understanding
+    This quiz covers all the material from the lesson. Try to answer all questions to test your understanding of gradients.
+    """)
+    
+    # Initialize quiz score in session state if not exists
+    if 'quiz_score' not in st.session_state:
+        st.session_state.quiz_score = 0
+    if 'quiz_submitted' not in st.session_state:
+        st.session_state.quiz_submitted = False
+    
+    # Quiz questions and answers
+    questions = [
+        {
+            "question": "What does the gradient of a function represent?",
+            "options": [
+                "The second derivative of the function",
+                "The direction of steepest descent",
+                "The direction and magnitude of steepest increase",
+                "The average rate of change"
+            ],
+            "correct": 2,
+            "explanation": "The gradient is a vector that points in the direction of steepest increase, with its magnitude indicating how steep that increase is."
+        },
+        {
+            "question": "For a function f(x,y), what is the correct representation of its gradient?",
+            "options": [
+                "∇f = f'(x)",
+                "∇f = (∂f/∂x, ∂f/∂y)",
+                "∇f = ∂²f/∂x∂y",
+                "∇f = ∫f dx dy"
+            ],
+            "correct": 1,
+            "explanation": "The gradient of a two-variable function is a vector of its partial derivatives with respect to each variable."
+        },
+        {
+            "question": "In machine learning, why do we move in the opposite direction of the gradient during gradient descent?",
+            "options": [
+                "To increase the loss function",
+                "To find the maximum value",
+                "To minimize the loss function",
+                "To maintain constant error"
+            ],
+            "correct": 2,
+            "explanation": "In gradient descent, we move opposite to the gradient to find the minimum of the loss function, as the gradient points in the direction of steepest increase."
+        },
+        {
+            "question": "What is the relationship between gradient and level curves?",
+            "options": [
+                "They are parallel to each other",
+                "They are perpendicular to each other",
+                "They are the same thing",
+                "There is no relationship"
+            ],
+            "correct": 1,
+            "explanation": "The gradient vector at any point is perpendicular to the level curve passing through that point."
+        },
+        {
+            "question": "In physics, what does the negative gradient of electric potential (V) give us?",
+            "options": [
+                "Electric current",
+                "Electric resistance",
+                "Electric field (E)",
+                "Electric charge"
+            ],
+            "correct": 2,
+            "explanation": "The electric field E is equal to the negative gradient of the electric potential V: E = -∇V."
+        },
+        {
+            "question": "What happens to the gradient at a local minimum?",
+            "options": [
+                "It becomes infinite",
+                "It becomes zero",
+                "It points upward",
+                "It points downward"
+            ],
+            "correct": 1,
+            "explanation": "At a local minimum, the gradient becomes zero as there is no direction of steepest increase."
+        },
+        {
+            "question": "Which of the following is NOT a type of gradient descent?",
+            "options": [
+                "Batch Gradient Descent",
+                "Stochastic Gradient Descent",
+                "Linear Gradient Descent",
+                "Mini-batch Gradient Descent"
+            ],
+            "correct": 2,
+            "explanation": "Linear Gradient Descent is not a type of gradient descent. The main types are Batch, Stochastic, and Mini-batch Gradient Descent."
+        },
+        {
+            "question": "What is the gradient of f(x,y) = x² + y²?",
+            "options": [
+                "(x, y)",
+                "(2x, 2y)",
+                "(2, 2)",
+                "(x², y²)"
+            ],
+            "correct": 1,
+            "explanation": "Taking partial derivatives: ∂f/∂x = 2x and ∂f/∂y = 2y, so ∇f = (2x, 2y)."
+        },
+        {
+            "question": "In quantum mechanics, what is the relationship between the momentum operator and the gradient?",
+            "options": [
+                "p̂ = ∇",
+                "p̂ = -iℏ∇",
+                "p̂ = ℏ∇",
+                "p̂ = i∇"
+            ],
+            "correct": 1,
+            "explanation": "In quantum mechanics, the momentum operator is given by p̂ = -iℏ∇, where ℏ is the reduced Planck constant."
+        },
+        {
+            "question": "What is a conservative field in vector calculus?",
+            "options": [
+                "A field that conserves energy",
+                "A field that points towards the center",
+                "A field that can be expressed as the gradient of a scalar function",
+                "A field that has constant magnitude"
+            ],
+            "correct": 2,
+            "explanation": "A conservative field is one that can be expressed as the gradient of a scalar potential function."
+        }
+    ]
+    
+    # Display questions
+    if not st.session_state.quiz_submitted:
+        st.session_state.user_answers = {}
+        
+        for i, q in enumerate(questions):
+            st.markdown(f"### Question {i+1}")
+            st.markdown(q["question"])
+            st.session_state.user_answers[i] = st.radio(
+                "Select your answer:",
+                q["options"],
+                key=f"q_{i}",
+                index=None
+            )
+        
+        # Submit button
+        if st.button("Submit Quiz"):
+            # Calculate score
+            score = 0
+            for i, q in enumerate(questions):
+                if st.session_state.user_answers[i] == q["options"][q["correct"]]:
+                    score += 1
+            
+            st.session_state.quiz_score = score
+            st.session_state.quiz_submitted = True
+            st.rerun()
+    
+    else:
+        # Display results
+        score = st.session_state.quiz_score
+        st.markdown(f"### Your Score: {score}/10")
+        
+        # Display percentage and appropriate message
+        percentage = (score / 10) * 100
+        if percentage >= 90:
+            st.success("🌟 Excellent! You have a strong understanding of gradients!")
+        elif percentage >= 70:
+            st.success("👍 Good job! You understand most concepts well.")
+        elif percentage >= 50:
+            st.warning("📚 You're on the right track, but might want to review some concepts.")
+        else:
+            st.error("💪 Keep studying! Try reviewing the material and attempt the quiz again.")
+        
+        # Review answers
+        st.markdown("### Review Your Answers")
+        for i, q in enumerate(questions):
+            st.markdown(f"#### Question {i+1}")
+            st.markdown(q["question"])
+            user_answer = st.session_state.user_answers[i]
+            correct_answer = q["options"][q["correct"]]
+            
+            if user_answer == correct_answer:
+                st.success(f"✅ Your answer: {user_answer}")
+            else:
+                st.error(f"❌ Your answer: {user_answer}")
+                st.success(f"Correct answer: {correct_answer}")
+            
+            st.info(f"Explanation: {q['explanation']}")
+        
+        # Retry button
+        if st.button("Try Again"):
+            st.session_state.quiz_submitted = False
+            st.session_state.quiz_score = 0
+            st.rerun()
+    
+    add_navigation_buttons(prev_page="Gradient Applications")
