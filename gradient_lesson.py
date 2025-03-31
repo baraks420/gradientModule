@@ -322,8 +322,8 @@ elif st.session_state["current_page"] == "Derivatives Basics":
         )
 
     # Display the selected function and its derivative
-    st.markdown(f"""
-    - Derivative: {get_derivative_string(function_choice)}
+    st.markdown("""
+    - Derivative: """ + get_derivative_string(function_choice) + """
     """)
 
     # Create interactive plot with slider
@@ -443,59 +443,243 @@ elif st.session_state["current_page"] == "Derivatives Basics":
 
 elif st.session_state["current_page"] == "Gradient Explanation":
     st.title("Detailed Explanation of Gradient")
-    st.markdown("""
-    ### Understanding the Gradient
-    The gradient is a vector of all partial derivatives of a function. For a function f(x,y):
     
-    $$
-    \\nabla f = \\left(\\frac{\\partial f}{\\partial x}, \\frac{\\partial f}{\\partial y}\\right)
-    $$
+    # Create tabs for different sections
+    theory_tab, examples_tab, practice_tab, calculator_tab = st.tabs(["Theory", "Examples", "Practice", "Calculator"])
     
-    ### Example
-    For the function f(x,y) = x² + y², the gradient is:
-    
-    $$
-    \\nabla f = (2x, 2y)
-    $$
-    
-    ### Key Properties
-    1. 📈 Points in direction of steepest increase
-    2. 📏 Magnitude shows rate of increase
-    3. ⚡ Perpendicular to level curves
-    
-    ### Interactive Calculator
-    Try calculating a gradient yourself:
-    """)
-    
-    # Interactive gradient calculator
-    x, y = sp.symbols('x y')
-    input_function = st.text_input("Enter a function in x and y (e.g., x^2 + y^2):", "x^2 + y^2")
-    
-    try:
-        # Replace ^ with ** for Python evaluation
-        python_expr = input_function.replace('^', '**')
-        expr = sp.sympify(python_expr)
-        # Convert back to ^ for display
-        display_expr = str(expr).replace('**', '^')
-        grad_x = sp.diff(expr, x)
-        grad_y = sp.diff(expr, y)
-        # Convert derivatives to display format
-        display_grad_x = str(grad_x).replace('**', '^')
-        display_grad_y = str(grad_y).replace('**', '^')
-        st.markdown(f"""
-        The gradient of f(x,y) = {display_expr} is:
+    with theory_tab:
+        st.markdown("""
+        ## Mathematical Foundation of Gradients
+
+        ### Definition
+        For a multivariable function f: ℝⁿ → ℝ, the gradient is defined as the vector of all partial derivatives:
         
         $$
-        \\nabla f = ({display_grad_x}, {display_grad_y})
+        \\nabla f = \\begin{pmatrix} 
+        \\frac{\\partial f}{\\partial x_1} \\\\
+        \\frac{\\partial f}{\\partial x_2} \\\\
+        \\vdots \\\\
+        \\frac{\\partial f}{\\partial x_n}
+        \\end{pmatrix}
         $$
+
+        ### Key Theoretical Properties
+        1. **Directional Derivative**: The directional derivative in direction v is:
+           $$D_v f(x) = \\nabla f(x) \\cdot v$$
+
+        2. **Maximum Rate of Change**: The gradient points in the direction of steepest ascent, with magnitude:
+           $$\\|\\nabla f(x)\\| = \\max_{\\|v\\|=1} D_v f(x)$$
+
+        3. **Level Sets**: At any point, the gradient is orthogonal to the level set passing through that point.
+
+        ### Critical Points and Optimization
+        - **Critical Points**: Points where ∇f = 0 or ∇f doesn't exist
+        - **Classification**:
+            * If eigenvalues > 0: Local minimum
+            * If eigenvalues < 0: Local maximum
+            * If mixed eigenvalues: Saddle point
         """)
-    except:
-        st.error("Please enter a valid mathematical expression")
+
+    with examples_tab:
+        st.markdown("""
+        ## Gradient Examples
+        
+        ### Basic Rules for Partial Derivatives
+        
+        1. **Treat other variables as constants**:
+           When finding ∂f/∂x, treat y as a constant, and vice versa.
+        
+        2. **Power Rule**:
+           $$\\frac{\\partial}{{\\partial x}} x^n = nx^{n-1}$$
+        
+        3. **Product Rule**:
+           $$\\frac{\\partial}{{\\partial x}} (uv) = u\\frac{\\partial v}{\\partial x} + v\\frac{\\partial u}{\\partial x}$$
+        
+        ### Common Examples
+        """)
+        
+        # Example selector
+        example_function = st.selectbox(
+            "Select an example to see its gradient:",
+            [
+                "f(x,y) = x² + y²",
+                "f(x,y) = x²y",
+                "f(x,y) = sin(x)cos(y)",
+                "f(x,y) = e^(x+y)",
+                "f(x,y) = ln(x) + y²"
+            ]
+        )
+        
+        examples = {
+            "f(x,y) = x² + y²": {
+                "gradient": ["2x", "2y"],
+                "explanation": "Each partial derivative treats the other variable as a constant. For ∂f/∂x, y² is constant; for ∂f/∂y, x² is constant."
+            },
+            "f(x,y) = x²y": {
+                "gradient": ["2xy", "x²"],
+                "explanation": "Use the product rule for ∂f/∂x. For ∂f/∂y, treat x² as a constant coefficient."
+            },
+            "f(x,y) = sin(x)cos(y)": {
+                "gradient": ["cos(x)cos(y)", "-sin(x)sin(y)"],
+                "explanation": "Use the product rule and chain rule. Note the negative sign in ∂f/∂y due to the derivative of cos(y)."
+            },
+            "f(x,y) = e^(x+y)": {
+                "gradient": ["e^(x+y)", "e^(x+y)"],
+                "explanation": "The chain rule gives us the same result for both partial derivatives since e^(x+y) is symmetric in x and y."
+            },
+            "f(x,y) = ln(x) + y²": {
+                "gradient": ["1/x", "2y"],
+                "explanation": "The partial derivatives are independent since the function is a sum. Use the natural log rule for x and power rule for y."
+            }
+        }
+        
+        example = examples[example_function]
+        st.markdown(f"""
+        For {example_function}, the gradient is:
+        
+        $$
+        \\nabla f = \\begin{{pmatrix}} 
+        \\frac{{\\partial f}}{{\\partial x}} = {example['gradient'][0]} \\\\[1em]
+        \\frac{{\\partial f}}{{\\partial y}} = {example['gradient'][1]}
+        \\end{{pmatrix}}
+        $$
+        
+        **Explanation**: {example['explanation']}
+        """)
+
+    with practice_tab:
+        st.markdown("""
+        ## Practice Problems
+        
+        Test your understanding of gradients with these practice problems.
+        Click each problem to see its solution.
+        """)
+        
+        # Initialize practice problem state if not exists
+        if 'gradient_problem_page' not in st.session_state:
+            st.session_state.gradient_problem_page = 0
+        
+        practice_problems = [
+            {
+                "function": "f(x,y) = x³ + 2xy",
+                "gradient": ["3x² + 2y", "2x"],
+                "explanation": "For ∂f/∂x, use power rule on x³ and treat y as constant in 2xy. For ∂f/∂y, treat x as constant."
+            },
+            {
+                "function": "f(x,y) = xy² + sin(x)",
+                "gradient": ["y² + cos(x)", "2xy"],
+                "explanation": "For ∂f/∂x, y² is a constant coefficient. For ∂f/∂y, use power rule treating x as constant."
+            },
+            {
+                "function": "f(x,y) = e^x cos(y)",
+                "gradient": ["e^x cos(y)", "-e^x sin(y)"],
+                "explanation": "Use product rule. Note the negative sign in ∂f/∂y from the derivative of cos(y)."
+            },
+            {
+                "function": "f(x,y) = ln(x²+y²)",
+                "gradient": ["2x/(x²+y²)", "2y/(x²+y²)"],
+                "explanation": "Use chain rule. The derivative of ln(u) is 1/u times the derivative of u."
+            },
+            {
+                "function": "f(x,y) = x²y³",
+                "gradient": ["2xy³", "3x²y²"],
+                "explanation": "Use product rule and power rule. Treat other variables as constants when taking each partial derivative."
+            }
+        ]
+        
+        # Display current problem
+        current_problem = practice_problems[st.session_state.gradient_problem_page]
+        
+        with st.expander(f"Problem {st.session_state.gradient_problem_page + 1}: Find ∇f for {current_problem['function']}", expanded=True):
+            if st.button("Show Solution", key=f"sol_{st.session_state.gradient_problem_page}"):
+                st.markdown(f"""
+                The gradient is:
+                $$
+                \\nabla f = \\begin{{pmatrix}} 
+                {current_problem['gradient'][0]} \\\\[1em]
+                {current_problem['gradient'][1]}
+                \\end{{pmatrix}}
+                $$
+                
+                **Explanation**: {current_problem['explanation']}
+                """)
+        
+        # Navigation buttons
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col1:
+            if st.session_state.gradient_problem_page > 0:
+                if st.button("← Previous Problem"):
+                    st.session_state.gradient_problem_page -= 1
+                    st.rerun()
+        
+        with col2:
+            st.markdown(f"<div style='text-align: center'>Problem {st.session_state.gradient_problem_page + 1} of {len(practice_problems)}</div>", unsafe_allow_html=True)
+        
+        with col3:
+            if st.session_state.gradient_problem_page < len(practice_problems) - 1:
+                if st.button("Next Problem →"):
+                    st.session_state.gradient_problem_page += 1
+                    st.rerun()
+
+    with calculator_tab:
+        st.markdown("""
+        ### Interactive Gradient Calculator
+        Experiment with calculating gradients of different functions:
+        """)
+        
+        # Interactive gradient calculator with advanced options
+        x, y, z = sp.symbols('x y z')
+        
+        # Function input
+        input_function = st.text_input("Enter a function (e.g., x**2 + y**2, x*y*z):", "x**2 + y**2")
+        
+        # Variable selection
+        variables = st.multiselect(
+            "Select variables to differentiate with respect to:",
+            ['x', 'y', 'z'],
+            default=['x', 'y']
+        )
+        
+        try:
+            expr = sp.sympify(input_function)
+            gradient_components = []
+            for var in variables:
+                grad = sp.diff(expr, eval(var))
+                gradient_components.append(grad)
+            
+            # Display the gradient
+            gradient_expr = ' \\\\ '.join([str(comp) for comp in gradient_components])
+            st.markdown("""
+            For the function f(""" + ', '.join(variables) + ") = " + str(expr) + """:
+            
+            The gradient is:
+            $$
+            \\nabla f = \\begin{pmatrix} """ + gradient_expr + """ \\end{pmatrix}
+            $$
+            """)
+            
+            # Additional mathematical properties
+            if len(variables) == 2:  # Only for 2D functions
+                x_val = st.slider("x value", -5.0, 5.0, 0.0, 0.1)
+                y_val = st.slider("y value", -5.0, 5.0, 0.0, 0.1)
+                
+                # Calculate gradient magnitude at point
+                grad_magnitude = sp.sqrt(sum(comp**2 for comp in gradient_components))
+                magnitude_at_point = grad_magnitude.subs({x: x_val, y: y_val})
+                
+                st.markdown("""
+                At point (""" + str(x_val) + ", " + str(y_val) + """):
+                
+                Gradient magnitude: """ + f"{magnitude_at_point:.2f}" + """
+                """)
+                
+        except Exception as e:
+            st.error(f"Please enter a valid mathematical expression. Error: {str(e)}")
     
     add_navigation_buttons(prev_page="Derivatives Basics", next_page="Gradient Visualization")
 
 elif st.session_state["current_page"] == "Gradient Visualization":
-    st.title("Visualizing Gradient")
+    st.title("Visualizing Gradients in Multiple Dimensions")
     st.markdown("""
     ### Understanding Gradient Fields
     A gradient field is a visual representation of gradients at different points in space. 
@@ -872,7 +1056,7 @@ elif st.session_state["current_page"] == "Gradient Visualization":
        - Observe how the gradient field reflects the symmetry of the function
        - For example, in x² + y², the field has radial symmetry
     """)
-    
+
     add_navigation_buttons(prev_page="Gradient Explanation", next_page="Gradient Applications")
 
 elif st.session_state["current_page"] == "Gradient Applications":
