@@ -526,71 +526,99 @@ elif st.session_state["current_page"] == "Gradient Explanation":
     """)
 
     with examples_tab:
-        st.markdown("""
-        ## Gradient Examples
-        
-        ### Basic Rules for Partial Derivatives
-        
-        1. **Treat other variables as constants**:
-           When finding ∂f/∂x, treat y as a constant, and vice versa.
-        
-        2. **Power Rule**:
-           $$\\frac{\\partial}{{\\partial x}} x^n = nx^{n-1}$$
-        
-        3. **Product Rule**:
-           $$\\frac{\\partial}{{\\partial x}} (uv) = u\\frac{\\partial v}{\\partial x} + v\\frac{\\partial u}{\\partial x}$$
-        
-        ### Common Examples
-        """)
-        
-        # Example selector
-        example_function = st.selectbox(
-            "Select an example to see its gradient:",
-            [
-                "f(x,y) = x² + y²",
-                "f(x,y) = x²y",
-                "f(x,y) = sin(x)cos(y)",
-                "f(x,y) = e^(x+y)",
-                "f(x,y) = ln(x) + y²"
-            ]
-        )
-        
-        examples = {
-            "f(x,y) = x² + y²": {
-                "gradient": ["2x", "2y"],
-                "explanation": "Each partial derivative treats the other variable as a constant. For ∂f/∂x, y² is constant; for ∂f/∂y, x² is constant."
-            },
-            "f(x,y) = x²y": {
-                "gradient": ["2xy", "x²"],
-                "explanation": "Use the product rule for ∂f/∂x. For ∂f/∂y, treat x² as a constant coefficient."
-            },
-            "f(x,y) = sin(x)cos(y)": {
-                "gradient": ["cos(x)cos(y)", "-sin(x)sin(y)"],
-                "explanation": "Use the product rule and chain rule. Note the negative sign in ∂f/∂y due to the derivative of cos(y)."
-            },
-            "f(x,y) = e^(x+y)": {
-                "gradient": ["e^(x+y)", "e^(x+y)"],
-                "explanation": "The chain rule gives us the same result for both partial derivatives since e^(x+y) is symmetric in x and y."
-            },
-            "f(x,y) = ln(x) + y²": {
-                "gradient": ["1/x", "2y"],
-                "explanation": "The partial derivatives are independent since the function is a sum. Use the natural log rule for x and power rule for y."
-            }
-        }
-        
-        example = examples[example_function]
-        st.markdown(f"""
-        For {example_function}, the gradient is:
-        
-        $$
-        \\nabla f = \\begin{{pmatrix}} 
-        \\frac{{\\partial f}}{{\\partial x}} = {example['gradient'][0]} \\\\[1em]
-        \\frac{{\\partial f}}{{\\partial y}} = {example['gradient'][1]}
-        \\end{{pmatrix}}
-        $$
-        
-        **Explanation**: {example['explanation']}
-        """)
+with theory_tab:
+    st.markdown("""
+    ## 🧠 Understanding the Gradient - Theory
+
+    ### 🔢 What is a Gradient?
+
+    The gradient is a **vector** that contains all the partial derivatives of a multivariable function:
+
+    $$
+    \\nabla f(x_1, x_2, ..., x_n) = 
+    \\left(\\frac{\\partial f}{\\partial x_1}, 
+           \\frac{\\partial f}{\\partial x_2}, 
+           ..., 
+           \\frac{\\partial f}{\\partial x_n}\\right)
+    $$
+
+    It tells us:
+    - The **direction** in which the function increases the fastest.
+    - The **magnitude** (length) tells us how steep the increase is.
+
+    ---
+    ### 📈 Gradient as a Directional Tool
+
+    The gradient always points in the direction of **steepest ascent**.
+
+    If you are climbing a hill described by \\( f(x, y) \\), then:
+
+    - \\( \\nabla f(x, y) \\) tells you where to go **uphill fastest**.
+    - Going in the opposite direction (\\( -\\nabla f \\)) leads **downhill**.
+    - If you walk **perpendicular** to the gradient — you stay at the **same height**.
+
+    ---
+    ### 🔍 Example: \( f(x, y) = x^2 + y^2 \)
+
+    #### 🧮 Step 1: Compute the Gradient
+
+    $$
+    \\frac{\\partial f}{\\partial x} = 2x \\quad , \\quad 
+    \\frac{\\partial f}{\\partial y} = 2y
+    $$
+
+    So the gradient is:
+
+    $$
+    \\nabla f(x, y) = (2x,\\ 2y)
+    $$
+
+    ---
+
+    #### 🧷 Step 2: Plug in Some Points
+
+    **Example A**:
+    $$
+    (x, y) = (1, 2) \\Rightarrow \\nabla f = (2, 4)
+    $$
+
+    **Example B**:
+    $$
+    (x, y) = (-3, 1) \\Rightarrow \\nabla f = (-6, 2)
+    $$
+
+    ---
+
+    #### 🔁 Step 3: What Do These Numbers Mean?
+
+    - The gradient is a **vector** showing the direction of **steepest increase**.
+    - For Example A:
+        - The vector (2, 4) points up and to the right.
+        - The function increases quickly in this direction.
+        - The slope is fairly steep:
+          $$
+          \\|\\nabla f\\| = \\sqrt{2^2 + 4^2} = \\sqrt{20} \\approx 4.47
+          $$
+
+    - For Example B:
+        - The vector (-6, 2) points left and up.
+        - The function increases even more steeply (magnitude \\( \\approx 6.32 \\)).
+
+    ---
+    ### 📏 Gradient Magnitude
+
+    The magnitude of the gradient vector tells us **how fast the function changes** in the steepest direction:
+
+    $$
+    \\| \\nabla f(x, y) \\| = 
+    \\sqrt{\\left(\\frac{\\partial f}{\\partial x}\\right)^2 + 
+           \\left(\\frac{\\partial f}{\\partial y}\\right)^2}
+    $$
+
+    - A **larger magnitude** means the slope is steeper at that point.
+    - A **zero gradient** means we're at a flat spot — possibly a minimum, maximum, or saddle point.
+
+    """)
 
     with practice_tab:
         st.markdown("""
