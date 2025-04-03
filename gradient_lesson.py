@@ -451,12 +451,19 @@ elif st.session_state["current_page"] == "Gradient Explanation":
         st.markdown(r"""
         ## 🧠 Mathematical Foundation of Gradients
     
-        ### 🔢 Definition
+        ### 📐 Definition
     
-        For a multivariable function \( f: \mathbb{R}^n \rightarrow \mathbb{R} \), the **gradient** is defined as:
+        For a multivariable function:
     
         $$
-        \nabla f = \begin{pmatrix} 
+        f: \mathbb{R}^n \rightarrow \mathbb{R}
+        $$
+    
+        The **gradient** is defined as:
+    
+        $$
+        \nabla f = 
+        \begin{pmatrix}
         \frac{\partial f}{\partial x_1} \\
         \frac{\partial f}{\partial x_2} \\
         \vdots \\
@@ -465,12 +472,13 @@ elif st.session_state["current_page"] == "Gradient Explanation":
         $$
     
         This vector tells us how the function changes in each variable direction.
+        """)
     
+        st.markdown(r"""
         ---
-    
         ### 🧩 Key Theoretical Properties
     
-        1. **Directional Derivative** (in direction \(\vec{v}\)):
+        1. **Directional Derivative** (in direction \( \vec{v} \)):
     
         $$
         D_{\vec{v}} f(x) = \nabla f(x) \cdot \vec{v}
@@ -480,104 +488,32 @@ elif st.session_state["current_page"] == "Gradient Explanation":
         The gradient points in the direction of steepest ascent:
     
         $$
-        \| \nabla f(x) \| = \max_{\|\vec{v}\| = 1} D_{\vec{v}} f(x)
+        \|\nabla f(x)\| = \max_{\|\vec{v}\| = 1} D_{\vec{v}} f(x)
         $$
     
         3. **Level Sets**:  
-        At any point, the gradient is orthogonal (perpendicular) to the level set:
+        At any point, the gradient is perpendicular to the level set:
     
         $$
         \nabla f(x, y) \perp \text{curve where } f(x, y) = c
         $$
+        """)
     
+        st.markdown(r"""
         ---
-    
         ### 🧮 Critical Points and Optimization
     
-        - A **critical point** occurs when \( \nabla f = 0 \) or when the gradient is undefined.
-        
-        - To classify critical points (in 2D, for example), examine the second derivatives:
-        
-            * All eigenvalues > 0 → **Local Minimum**
-            * All eigenvalues < 0 → **Local Maximum**
-            * Mixed signs → **Saddle Point**
-    
-        ---
-    
-        ### 📈 Gradient as a Directional Tool
-    
-        The gradient always points in the direction of **steepest ascent**.
-    
-        If you are climbing a hill described by a function \( f(x, y) \), then:
-    
-        - \( \nabla f(x, y) \) tells you where to go **uphill fastest**
-        - \( -\nabla f(x, y) \) leads **downhill**
-        - Walking **perpendicular** to the gradient means staying at the **same height** (on a level curve)
-    
-        ---
-    
-        ### 🔍 Example: \( f(x, y) = x^2 + y^2 \)
-    
-        #### Step 1: Compute the Gradient
+        A **critical point** is a point where:
     
         $$
-        \frac{\partial f}{\partial x} = 2x \quad , \quad 
-        \frac{\partial f}{\partial y} = 2y
+        \nabla f = 0 \quad \text{or} \quad \text{the gradient is undefined}
         $$
     
-        So the gradient is:
+        **Classification of critical points** (via second derivatives / Hessian matrix):
     
-        $$
-        \nabla f(x, y) = (2x,\ 2y)
-        $$
-    
-        ---
-    
-        #### Step 2: Plug in Some Points
-    
-        **Example A**:
-    
-        $$
-        (x, y) = (1, 2) \Rightarrow \nabla f = (2, 4)
-        $$
-    
-        **Example B**:
-    
-        $$
-        (x, y) = (-3, 1) \Rightarrow \nabla f = (-6, 2)
-        $$
-    
-        ---
-    
-        #### Step 3: What Do These Numbers Mean?
-    
-        - The gradient is a vector showing the direction of **steepest increase**.
-        - For Example A:
-            - Points up and right
-            - Magnitude:
-            $$
-            \| \nabla f \| = \sqrt{2^2 + 4^2} = \sqrt{20} \approx 4.47
-            $$
-        - For Example B:
-            - Points left and slightly up
-            - Steeper slope:
-            $$
-            \| \nabla f \| = \sqrt{(-6)^2 + 2^2} = \sqrt{40} \approx 6.32
-            $$
-    
-        ---
-    
-        ### 📏 Gradient Magnitude
-    
-        The gradient’s magnitude shows **how steep** the function increases at a point:
-    
-        $$
-        \| \nabla f(x, y) \| = \sqrt{ \left( \frac{\partial f}{\partial x} \right)^2 + \left( \frac{\partial f}{\partial y} \right)^2 }
-        $$
-    
-        - **Large magnitude** → rapid change (steep slope)
-        - **Zero magnitude** → flat spot (possible minimum/maximum)
-    
+        - All eigenvalues > 0 → **Local Minimum**
+        - All eigenvalues < 0 → **Local Maximum**
+        - Mixed signs → **Saddle Point**
         """)
 
     with examples_tab:
