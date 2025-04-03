@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from derivative_examples import DERIVATIVE_RULES, PRACTICE_PROBLEMS
 
+
 # Initialize session state for page navigation if it doesn't exist
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "Welcome"
