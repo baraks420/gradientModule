@@ -450,17 +450,17 @@ elif st.session_state["current_page"] == "Gradient Explanation":
     with theory_tab:
         st.markdown(r"""
         ## 🧠 Mathematical Foundation of Gradients
-    
+
         ### 📐 Definition
-    
+
         For a multivariable function:
-    
+
         $$
         f: \mathbb{R}^n \rightarrow \mathbb{R}
         $$
-    
+
         The **gradient** is defined as:
-    
+
         $$
         \nabla f = 
         \begin{pmatrix}
@@ -470,50 +470,139 @@ elif st.session_state["current_page"] == "Gradient Explanation":
         \frac{\partial f}{\partial x_n}
         \end{pmatrix}
         $$
-    
+
         This vector tells us how the function changes in each variable direction.
         """)
-    
+
         st.markdown(r"""
         ---
         ### 🧩 Key Theoretical Properties
-    
-        1. **Directional Derivative** (in direction \( \vec{v} \)):
-    
+
+        1. **Directional Derivative** in the direction of a vector v (where v is a unit vector):
+
         $$
-        D_{\vec{v}} f(x) = \nabla f(x) \cdot \vec{v}
+        D_{\vec{v}} f(x) = \nabla f(x) \cdot \frac{\vec{v}}{\|\vec{v}\|}
         $$
-    
+
+        This represents the rate of change of the function f in the direction of v, providing insights into how the function behaves along different paths.
+
         2. **Maximum Rate of Change**:  
-        The gradient points in the direction of steepest ascent:
-    
+        The gradient vector ∇f(x) indicates the direction of the steepest ascent, and its magnitude ||∇f(x)|| gives the maximum rate of change at that point:
+
         $$
         \|\nabla f(x)\| = \max_{\|\vec{v}\| = 1} D_{\vec{v}} f(x)
         $$
-    
+
+        This property is crucial in optimization, as it helps identify the most efficient path to increase the function's value.
+
         3. **Level Sets**:  
-        At any point, the gradient is perpendicular to the level set:
-    
+        At any point, the gradient is orthogonal to the level set, which is the set of points where the function takes a constant value:
+
         $$
         \nabla f(x, y) \perp \text{curve where } f(x, y) = c
         $$
+
+        This orthogonality is fundamental in understanding the geometry of functions and is widely used in fields such as differential geometry and physics.
         """)
-    
+
         st.markdown(r"""
         ---
         ### 🧮 Critical Points and Optimization
-    
-        A **critical point** is a point where:
-    
+
+        A **critical point** is a point where the gradient is zero or undefined, indicating potential local extrema or saddle points:
+
         $$
         \nabla f = 0 \quad \text{or} \quad \text{the gradient is undefined}
         $$
-    
-        **Classification of critical points** (via second derivatives / Hessian matrix):
-    
-        - All eigenvalues > 0 → **Local Minimum**
-        - All eigenvalues < 0 → **Local Maximum**
-        - Mixed signs → **Saddle Point**
+
+        **Classification of critical points** involves analyzing the Hessian matrix, which is the matrix of second-order partial derivatives:
+
+        - **Local Minimum**: All eigenvalues of the Hessian are positive, indicating a convex region.
+        - **Local Maximum**: All eigenvalues are negative, indicating a concave region.
+        - **Saddle Point**: Mixed signs in the eigenvalues, indicating a point of inflection.
+
+        Understanding these classifications is essential in multivariable calculus and optimization, as they provide insights into the nature of the function's behavior at critical points.
+        """)
+
+        st.markdown(r"""
+        ---
+        ### 📈 Gradient as a Directional Tool
+
+        The gradient always points in the direction of **steepest ascent**.
+
+        If you are climbing a hill described by a function \( f(x, y) \), then:
+
+        - ∇f(x, y) tells you where to go **uphill fastest**
+        - -∇f(x, y) leads **downhill**
+        - Walking **perpendicular** to the gradient → **stay on the same level**
+        """)
+
+        st.markdown(r"""
+        ---
+        ### 🔍 Example: \( f(x, y) = x^2 + y^2 \)
+
+        #### ✅ Step 1: Compute the Gradient
+
+        $$
+        \frac{\partial f}{\partial x} = 2x \quad , \quad 
+        \frac{\partial f}{\partial y} = 2y
+        $$
+
+        So:
+
+        $$
+        \nabla f(x, y) = (2x, 2y)
+        $$
+
+        ---
+
+        #### ✅ Step 2: Plug in Some Points
+
+        **Example A**:
+
+        $$
+        (x, y) = (1, 2) \Rightarrow \nabla f = (2, 4)
+        $$
+
+        **Example B**:
+
+        $$
+        (x, y) = (-3, 1) \Rightarrow \nabla f = (-6, 2)
+        $$
+
+        ---
+
+        #### ✅ Step 3: What Do These Numbers Mean?
+
+        - The gradient is a **vector** showing the direction of **steepest increase**.
+        - For Example A:
+
+            $$
+            \|\nabla f\| = \sqrt{2^2 + 4^2} = \sqrt{20} \approx 4.47
+            $$
+
+        - For Example B:
+
+            $$
+            \|\nabla f\| = \sqrt{(-6)^2 + 2^2} = \sqrt{40} \approx 6.32
+            $$
+
+        - So:
+            - **B** is steeper than **A**.
+            - The direction shows **where to move** to climb fastest.
+
+        ---
+
+        ### 📏 Gradient Magnitude
+
+        The gradient's magnitude tells us how steep the function is:
+
+        $$
+        \|\nabla f(x, y)\| = \sqrt{ \left( \frac{\partial f}{\partial x} \right)^2 + \left( \frac{\partial f}{\partial y} \right)^2 }
+        $$
+
+        - A **larger value** means the function increases faster at that point.
+        - If the gradient is 0, the function is **flat** there (possible minimum or maximum).
         """)
 
     with examples_tab:
@@ -669,18 +758,14 @@ elif st.session_state["current_page"] == "Gradient Explanation":
         # Function input
         input_function = st.text_input("Enter a function (e.g., x**2 + y**2, x*y*z):", "x**2 + y**2")
         
-        # Variable selection
-        variables = st.multiselect(
-            "Select variables to differentiate with respect to:",
-            ['x', 'y', 'z'],
-            default=['x', 'y']
-        )
-        
         try:
             expr = sp.sympify(input_function)
+            # Automatically detect used variables
+            variables = sorted(str(var) for var in expr.free_symbols)
+            
             gradient_components = []
             for var in variables:
-                grad = sp.diff(expr, eval(var))
+                grad = sp.diff(expr, sp.Symbol(var))
                 gradient_components.append(grad)
             
             # Display the gradient
@@ -696,19 +781,21 @@ elif st.session_state["current_page"] == "Gradient Explanation":
             
             # Additional mathematical properties
             if len(variables) == 2:  # Only for 2D functions
-                x_val = st.slider("x value", -5.0, 5.0, 0.0, 0.1)
-                y_val = st.slider("y value", -5.0, 5.0, 0.0, 0.1)
+                var1, var2 = variables
+                val1 = st.slider(f"{var1} value", -5.0, 5.0, 0.0, 0.1)
+                val2 = st.slider(f"{var2} value", -5.0, 5.0, 0.0, 0.1)
                 
                 # Calculate gradient magnitude at point
                 grad_magnitude = sp.sqrt(sum(comp**2 for comp in gradient_components))
-                magnitude_at_point = grad_magnitude.subs({x: x_val, y: y_val})
+                point_values = {sp.Symbol(var1): val1, sp.Symbol(var2): val2}
+                magnitude_at_point = grad_magnitude.subs(point_values)
                 
-                st.markdown("""
-                At point (""" + str(x_val) + ", " + str(y_val) + """):
+                st.markdown(f"""
+                At point ({val1}, {val2}):
                 
-                Gradient magnitude: """ + f"{magnitude_at_point:.2f}" + """
+                Gradient magnitude: {magnitude_at_point:.2f}
                 """)
-                
+            
         except Exception as e:
             st.error(f"Please enter a valid mathematical expression. Error: {str(e)}")
     
